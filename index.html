@@ -250,7 +250,7 @@ function speak(list,voice,synth) {
         console.log('speech ended!')
         window.setTimeout(() => {
         	speak(list.slice(1),voice,synth);
-        }, 30000);
+        }, 10000);
       });
       
       synth.speak(msg);
