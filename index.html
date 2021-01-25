@@ -1,0 +1,269 @@
+
+
+<!DOCTYPE html>
+<html lang="en" >
+
+<head>
+
+  <meta charset="UTF-8">
+  
+<link rel="apple-touch-icon" type="image/png" href="https://cpwebassets.codepen.io/assets/favicon/apple-touch-icon-5ae1a0698dcc2402e9712f7d01ed509a57814f994c660df9f7a952f3060705ee.png" />
+<meta name="apple-mobile-web-app-title" content="CodePen">
+
+<link rel="shortcut icon" type="image/x-icon" href="https://cpwebassets.codepen.io/assets/favicon/favicon-aec34940fbc1a6e787974dcd360f2c6b63348d4b1f4e06c77743096d55480f33.ico" />
+
+<link rel="mask-icon" type="" href="https://cpwebassets.codepen.io/assets/favicon/logo-pin-8f3771b1072e3c38bd662872f6b673a722f4b3ca2421637d5596661b4e2132cc.svg" color="#111" />
+
+
+  <title>Ma dictée</title>
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+
+  <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.6/css/bootstrap.min.css'>
+<link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Open+Sans'>
+  
+<style>
+html, body {
+  min-width: 100vw;
+  min-height: 100vh;
+}
+
+html {
+  background: linear-gradient(to left, #43C6AC, #191654);
+}
+
+body {
+  background: transparent;
+}
+
+body, button, input, optgroup, select, textarea {
+  font-family: "Open Sans", sans-serif;
+}
+
+.form-container {
+  min-width: 100vw;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+form {
+  padding: 30px;
+  max-width: 600px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 3px;
+  box-shadow: 0 10px 30px 10px rgba(0, 0, 0, 0.1);
+}
+
+.v-spinner {
+  position: fixed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.8);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity ease 0.5s;
+}
+
+.fade-enter, .fade-leave-to {
+  opacity: 0;
+}
+
+.btn-success {
+  background: #43C6AC;
+  border-color: #43C6AC;
+  cursor: pointer;
+}
+
+h1 {
+  margin-bottom: 25px;
+}
+</style>
+
+  <script>
+  window.console = window.console || function(t) {};
+</script>
+
+  
+  
+  <script>
+  if (document.location.search.match(/type=embed/gi)) {
+    window.parent.postMessage("resize", "*");
+  }
+</script>
+
+
+</head>
+
+<body translate="no" >
+  <!-- https://github.com/tjFogarty/speech-synthesis -->
+<div id="app">
+  <transition name="fade" v-if="isLoading">
+    <pulse-loader></pulse-loader>
+  </transition>
+
+  <transition name="fade" v-if="!isLoading">
+    <div class="form-container">
+
+      <form @submit.prevent="greet">
+        <h1>Ma dictée</h1>
+
+        <div class="form-group">
+          <label for="your-name">Votre nom</label>
+          <input class="form-control" id="your-name" type="text" v-model="name" required>
+        </div>
+        <div class="form-group">
+            <label for="item-select">Liste</label>
+            <select class="form-control" id='item-select' v-model="item">
+                <option selected value='1'>Les prépositions 1</option>
+                <option value='2'>Les prépositions 2</option>
+                <option value='3'>Les adverbes et conjonctions 1</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-success">Démarrer</button>
+      </form>
+
+    </div>
+  </transition>
+</div>
+    <script src="https://cpwebassets.codepen.io/assets/common/stopExecutionOnTimeout-157cd5b220a5c80d4ff8e0e70ac069bffd87a61252088146915e8726e5d9f147.js"></script>
+
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/vue/2.1.8/vue.min.js'></script>
+<script src='https://unpkg.com/vue-spinner@1.0.2/dist/vue-spinner.min.js'></script>
+      <script id="rendered-js" >
+// https://github.com/tjFogarty/speech-synthesis
+
+var PulseLoader = VueSpinner.PulseLoader;
+
+new Vue({
+  el: '#app',
+
+  data() {
+    return {
+      isLoading: true,
+      name: '',
+      item: '',
+      selectedVoice: 0,
+      synth: window.speechSynthesis,
+      voiceList: [],
+      greetingSpeech: new window.SpeechSynthesisUtterance() };
+
+  },
+
+  components: {
+    PulseLoader },
+
+
+  mounted() {
+    // wait for voices to load
+    // I can't get FF to work without calling this first
+    // Chrome works on the onvoiceschanged function
+    this.voiceList = this.synth.getVoices();
+
+    if (this.voiceList.length) {
+      this.isLoading = false;
+    }
+
+    this.synth.onvoiceschanged = () => {
+      this.voiceList = this.synth.getVoices();
+      // give a bit of delay to show loading screen
+      // just for the sake of it, I suppose. Not the best reason
+      setTimeout(() => {
+        this.isLoading = false;
+      }, 800);
+    };
+
+    this.listenForSpeechEvents();
+  },
+
+  methods: {
+    /**
+     * React to speech events
+     */
+    listenForSpeechEvents() {
+      this.greetingSpeech.onstart = () => {
+        this.isLoading = true;
+      };
+
+      this.greetingSpeech.onend = () => {
+        this.isLoading = false;
+      };
+    },
+
+    /**
+     * Shout at the user
+     */
+    greet() {
+      // it should be 'craic', but it doesn't sound right
+        this.greetingSpeech.text = `Bonjour, ${this.name}. C'est parti!`;
+        this.greetingSpeech.voice = this.voiceList[3];
+        this.synth.speak(this.greetingSpeech);
+        this.startExercice()
+    },
+    
+    startExercice(){
+        var tab1 = ["à", "après", "avant","avec","chez","contre","dans","de","depuis","derrière","dès","devant","durant","en","entre","envers"];
+        var tab2 = ["hormis","hors","malgré","outre","par","parmi","pendant","pour","sans","sauf","selon","suivant","sur","vers","via","vu"];
+        var tab3 = ["afin de","ailleurs","ainsi","alors","assez","à travers","au-dessous","au-dessus","aujourd'hui","auparavant"];
+        var tab;
+        switch (this.item) {
+            case '1':
+                tab=tab1;
+                break;
+            case '2':
+                tab=tab2;
+                break;
+            case '3':
+                tab=tab3;
+                break;
+            default:
+                tab=tab1;
+                break;
+        }
+        speak(tab,this.voiceList[3],this.synth);    
+    }
+        
+} });
+
+function speak(list,voice,synth) {
+    if (list.length) {
+      var msg = new window.SpeechSynthesisUtterance();
+      msg.voice = voice;
+      msg.text = list[0];
+			
+      msg.onstart = function() {
+        console.log('speech started!')
+      };
+      
+      msg.addEventListener('end', function(e) {
+        console.log('speech ended!')
+        window.setTimeout(() => {
+        	speak(list.slice(1),voice,synth);
+        }, 30000);
+      });
+      
+      synth.speak(msg);
+    }
+};
+
+//# sourceURL=pen.js
+
+    </script>
+
+  
+
+</body>
+
+</html>
+ 
