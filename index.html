@@ -178,6 +178,10 @@ new Vue({
 
     this.synth.onvoiceschanged = () => {
       this.voiceList = this.synth.getVoices();
+      for (i=0;i<this.voiceList.length;i++){
+        if(this.voiceList[i].lang=="fr-FR")
+          this.selectedVoice=this.voiceList[i];
+      }
       // give a bit of delay to show loading screen
       // just for the sake of it, I suppose. Not the best reason
       setTimeout(() => {
@@ -208,7 +212,7 @@ new Vue({
     greet() {
       // it should be 'craic', but it doesn't sound right
         this.greetingSpeech.text = `Bonjour, ${this.name}. C'est parti!`;
-        this.greetingSpeech.voice = this.voiceList[3];
+        this.greetingSpeech.voice = this.selectedVoice;
         this.synth.speak(this.greetingSpeech);
         this.startExercice()
     },
@@ -236,7 +240,7 @@ new Vue({
                 tab=tab1;
                 break;
         }
-        speak(tab,this.voiceList[3],this.synth);    
+        speak(tab,this.selectedVoice,this.synth);    
     }
         
 } });
