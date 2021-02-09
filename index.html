@@ -216,6 +216,7 @@ new Vue({
         var tab1 = ["à", "après", "avant","avec","chez","contre","dans","de","depuis","derrière","dès","devant","durant","en","entre","envers"];
         var tab2 = ["hormis","hors","malgré","outre","par","parmi","pendant","pour","sans","sauf","selon","suivant","sur","vers","via","vu"];
         var tab3 = ["afin de","ailleurs","ainsi","alors","assez","à travers","au-dessous","au-dessus","aujourd'hui","auparavant"];
+        var tab4 = ["auprès","aussi","aussitot","autant","autour","autrefois","autrement","beaucoup","bien","bientot"];
         var tab;
         switch (this.item) {
             case '1':
@@ -226,6 +227,9 @@ new Vue({
                 break;
             case '3':
                 tab=tab3;
+                break;
+            case '4':
+                tab=tab4;
                 break;
             default:
                 tab=tab1;
@@ -250,7 +254,7 @@ function speak(list,voice,synth) {
         console.log('speech ended!')
         window.setTimeout(() => {
         	speak(list.slice(1),voice,synth);
-        }, 10000);
+        }, 15000);
       });
       
       synth.speak(msg);
